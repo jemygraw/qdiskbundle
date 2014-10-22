@@ -29,6 +29,11 @@ func SyncVolumeData(srcVolume string, destVolume string, bufferSize int64, worke
 	var allWorkers int32 = 0
 	syncStart := time.Now()
 	L.Informational("Sync `%s' -> `'%s start from `%s'", srcVolume, destVolume, syncStart.String())
+	syncDone := make(chan bool)
+	//receive the sync result
+	go func() {
+		<-syncDone
+	}()
 	for bReader.Scan() {
 		line := bReader.Text()
 		//split to name and size
@@ -79,14 +84,23 @@ func SyncVolumeData(srcVolume string, destVolume string, bufferSize int64, worke
 				go copy(srcFileH, destFileH, fsize, bufferSize, srcFullPath, destFullPath, &allWorkers)
 				break
 			} else {
-				//wait a time to avoid infinite cycle
+				//wait some time to avoid infinite cycle
 				<-time.After(time.Microsecond * 1)
 			}
 		}
 	}
-	syncEnd := time.Now()
-	L.Informational("Sync `%s' -> `%s' end at `%s'", srcVolume, destVolume, syncEnd.String())
-	L.Informational("Sync `%s' -> `%s' end at `%s'", srcVolume, destVolume, time.Since(syncStart))
+	for {
+		L.Debug("Remaing workers: `%s'", atomic.LoadInt32(&allWorkers))
+		if atomic.LoadInt32(&allWorkers) == 0 {
+			syncDone <- true
+			syncEnd := time.Now()
+			L.Informational("Sync `%s' -> `%s' end at `%s'", srcVolume, destVolume, syncEnd.String())
+			L.Informational("Sync `%s' -> `%s' last for `%s'", srcVolume, destVolume, time.Since(syncStart))
+			break
+		} else {
+			<-time.After(time.Second * 5)
+		}
+	}
 }
 
 func copy(srcFileH, destFileH *os.File, fsize int64, bufferSize int64, srcFullPath, destFullPath string, allWorkers *int32) {
