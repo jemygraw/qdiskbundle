@@ -56,32 +56,13 @@ func SyncVolumeData(srcVolume string, destVolume string, bufferSize int64, worke
 		//join the path
 		srcFullPath := filepath.Join(srcVolume, fname)
 		destFullPath := filepath.Join(destVolume, fname)
-		//check src and dest file
-		srcFileH, srcErr := os.Open(srcFullPath)
-		if srcErr != nil {
-			L.Error("Open src file `%s' error `%s'", srcFullPath, srcErr.Error())
-			continue
-		}
-		//create path if necessary
-		lastSlashIndex := strings.LastIndex(destFullPath, "/")
-		destFullPathBase := destFullPath[:lastSlashIndex]
-		if err := os.MkdirAll(destFullPathBase, 0775); err != nil {
-			L.Error("Failed to create dir `%s' due to error `%s'", destFullPathBase, err.Error())
-			continue
-		}
-		destFileH, destErr := os.OpenFile(destFullPath, os.O_CREATE|os.O_RDWR, os.FileMode(fperm))
-		if destErr != nil {
-			L.Error("Open dest file `%s' error `%s'", destFullPath, destErr.Error())
-			continue
-		}
-
 		//check whether it's time to run copy
 		for {
 			curWorkers := atomic.LoadInt32(&allWorkers)
 			L.Debug("Current Workers: `%d'", curWorkers)
 			if curWorkers < workerCount {
 				atomic.AddInt32(&allWorkers, 1)
-				go copy(srcFileH, destFileH, fsize, bufferSize, srcFullPath, destFullPath, &allWorkers)
+				go copy(srcFullPath, destFullPath, fsize, os.FileMode(fperm), bufferSize, &allWorkers)
 				break
 			} else {
 				//wait some time to avoid infinite cycle
@@ -103,11 +84,30 @@ func SyncVolumeData(srcVolume string, destVolume string, bufferSize int64, worke
 	}
 }
 
-func copy(srcFileH, destFileH *os.File, fsize int64, bufferSize int64, srcFullPath, destFullPath string, allWorkers *int32) {
+func copy(srcFullPath, destFullPath string, fsize int64, fperm os.FileMode, bufferSize int64, allWorkers *int32) {
 	defer func() {
 		atomic.AddInt32(allWorkers, -1)
 		runtime.Gosched()
 	}()
+	//check src and dest file
+	srcFileH, srcErr := os.Open(srcFullPath)
+	if srcErr != nil {
+		L.Error("Open src file `%s' error `%s'", srcFullPath, srcErr.Error())
+		return
+	}
+	//create path if necessary
+	lastSlashIndex := strings.LastIndex(destFullPath, "/")
+	destFullPathBase := destFullPath[:lastSlashIndex]
+	if err := os.MkdirAll(destFullPathBase, 0775); err != nil {
+		L.Error("Failed to create dir `%s' due to error `%s'", destFullPathBase, err.Error())
+		return
+	}
+	destFileH, destErr := os.OpenFile(destFullPath, os.O_CREATE|os.O_RDWR, os.FileMode(fperm))
+	if destErr != nil {
+		L.Error("Open dest file `%s' error `%s'", destFullPath, destErr.Error())
+		return
+	}
+
 	L.Debug("Copying from `%s' to `%s'", srcFullPath, destFullPath)
 	buffer := make([]byte, bufferSize)
 	var cpErr error
