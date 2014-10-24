@@ -13,7 +13,12 @@ import (
 )
 
 //read from snapshot and copy
-func SyncVolumeData(srcVolume string, destVolume string, bufferSize int64, workerCount int32) {
+func SyncVolumeData(conf *Conf) {
+	srcVolume := conf.SrcVolume
+	destVolume := conf.DestVolume
+	bufferSize := conf.BufferSize
+	workerCount := conf.WorkerCount
+
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	cacheFile := "qdisksync.cache"
 	cacheFileH, err := os.Open(cacheFile)

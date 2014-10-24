@@ -12,7 +12,7 @@ import (
 func CacheVolumeTree(volume string) {
 	cacheFile := "qdisksync.cache"
 	if _, err := os.Stat(cacheFile); err != nil {
-		L.Error("No cache file `%s' found, will create one", cacheFile)
+		L.Informational("No cache file `%s' found, will create one", cacheFile)
 	} else {
 		if rErr := os.Rename(cacheFile, cacheFile+".old"); rErr != nil {
 			L.Error("Unable to rename cache file, plz manually delete `%s' and `%s.old'",
