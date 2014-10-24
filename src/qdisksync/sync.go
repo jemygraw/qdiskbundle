@@ -90,7 +90,7 @@ func SyncVolumeData(srcVolume string, destVolume string, bufferSize int64, worke
 		}
 	}
 	for {
-		L.Debug("Remaing workers: `%s'", atomic.LoadInt32(&allWorkers))
+		L.Debug("Remained workers: `%d'", atomic.LoadInt32(&allWorkers))
 		if atomic.LoadInt32(&allWorkers) == 0 {
 			syncDone <- true
 			syncEnd := time.Now()
