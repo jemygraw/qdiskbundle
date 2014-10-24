@@ -53,7 +53,7 @@ func main() {
 		qds.CacheVolumeTree(conf.SrcVolume)
 	case "sync":
 		//sync data by snapshot
-		qds.SyncVolumeData(conf.SrcVolume, conf.DestVolume, conf.BufferSize, conf.WorkerCount)
+		qds.SyncVolumeData(conf)
 	default:
 		qds.L.Error("Unknow command `%s'", cmdName)
 	}

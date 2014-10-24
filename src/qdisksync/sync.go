@@ -33,7 +33,7 @@ func SyncVolumeData(conf *Conf) {
 	//init channel
 	var allWorkers int32 = 0
 	syncStart := time.Now()
-	L.Informational("Sync `%s' -> `'%s start from `%s'", srcVolume, destVolume, syncStart.String())
+	L.Informational("Sync `%s' -> `%s' start from `%s'", srcVolume, destVolume, syncStart.String())
 	syncDone := make(chan bool)
 	//receive the sync result
 	go func() {
