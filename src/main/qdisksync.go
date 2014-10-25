@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	qds "qdisksync"
+	"strings"
 )
 
 var conf *qds.Conf
@@ -31,8 +32,8 @@ Usage:
 	Sync the data between the volumes
 
 Commands:
-	qdisksync cache - make a new snapshot of the tree of the volume
-	qdisksync sync - start to sync the data by the snapshot
+	qdisksync cache cacheFile - Make a new snapshot of the tree of the volume
+	qdisksync sync cacheFile - Start to sync the data by the snapshot
 
 Build:
 	v1.0.0
@@ -41,19 +42,20 @@ Build:
 }
 func main() {
 	cmdArgs := os.Args
-	if len(cmdArgs) != 2 {
+	if len(cmdArgs) != 3 {
 		help()
 		return
 	}
 	initConfig()
 	cmdName := cmdArgs[1]
-	switch cmdName {
+	cacheFile := cmdArgs[2]
+	switch strings.ToLower(cmdName) {
 	case "cache":
 		//cache volume tree
-		qds.CacheVolumeTree(conf.SrcVolume)
+		qds.CacheVolumeTree(conf.SrcVolume, cacheFile)
 	case "sync":
 		//sync data by snapshot
-		qds.SyncVolumeData(conf)
+		qds.SyncVolumeData(conf, cacheFile)
 	default:
 		qds.L.Error("Unknow command `%s'", cmdName)
 	}

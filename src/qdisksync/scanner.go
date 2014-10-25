@@ -9,8 +9,7 @@ import (
 	"time"
 )
 
-func CacheVolumeTree(volume string) {
-	cacheFile := "qdisksync.cache"
+func CacheVolumeTree(volume string, cacheFile string) {
 	if _, err := os.Stat(cacheFile); err != nil {
 		L.Informational("No cache file `%s' found, will create one", cacheFile)
 	} else {
