@@ -19,8 +19,8 @@ const (
 type Conf struct {
 	SrcVolume   string `json:"src_volume"`
 	DestVolume  string `json:"dest_volume"`
-	BufferSize  int64  `json:"buffer_size"`
-	WorkerCount int32  `json:"worker_count"`
+	BufferSize  int64  `json:"buffer_size,omitempty"`
+	WorkerCount int32  `json:"worker_count,omitempty"`
 }
 
 func InitLogs(jsonConfig string, debugMode bool) {
