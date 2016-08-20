@@ -57,3 +57,31 @@ Usage of ./qdisksync:
   -worker int
     	sync worker count (default 1)
 ```
+
+|参数|描述|
+|----|----|
+|file|待同步的文件列表|
+|dest|同步的目标路径|
+|key|scp 命令所需要的无密码的私钥|
+|user|scp 远程登录的用户名|
+|host|scp 远程登录的主机IP或域名|
+|worker|并发拷贝的 scp 进程数量|
+
+其中参数 `file` 为待同步的文件列表，需要由工具 `qdisklist` 生成，`qdisklist` 工具生成的文件列表格式固定，可以把多个列表进行处理合并为一个，作为 `file`  的参数。因为当你遇到需要把源磁盘路径上面的文件拷贝到目标磁盘的时候，你需要合理地分配哪些文件拷贝到哪个磁盘上面去。
+
+
+```
+Usage of ./qdisklist:
+  -dir string
+      list dir
+  -prefix string
+      key prefix
+  -result string
+      list result file
+```
+
+|参数|描述|
+|---|----|
+|dir|待获取文件列表的目录|
+|prefix|待同步文件的名称前缀|
+|result|文件列表结果的保存文件名|
