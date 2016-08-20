@@ -17,6 +17,16 @@ func main() {
 	flag.StringVar(&result, "result", "", "list result file")
 	flag.Parse()
 
+	if listDir == "" {
+		fmt.Println("Error: no list dir")
+		return
+	}
+
+	if result == "" {
+		fmt.Println("Error: no list result file")
+		return
+	}
+
 	listAbsDir, cErr := filepath.Abs(listDir)
 	if cErr != nil {
 		fmt.Println("Error: invalid list dir")
