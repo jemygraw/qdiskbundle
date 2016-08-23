@@ -85,3 +85,6 @@ Usage of ./qdisklist:
 |dir|待获取文件列表的目录|
 |prefix|待同步文件的名称前缀|
 |result|文件列表结果的保存文件名|
+
+# 实例
+

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -26,6 +27,9 @@ func ListDir(listAbsDir, prefix, listResultFile string) {
 			if !fi.IsDir() {
 				relPath := strings.TrimPrefix(strings.TrimPrefix(path, listAbsDir), string(os.PathSeparator))
 				fileKey := fmt.Sprintf("%s%s", prefix, relPath)
+				if runtime.GOOS == "windows" {
+					fileKey = strings.Replace(fileKey, "\\", "/", -1)
+				}
 				fsize := fi.Size()
 				fmeta := fmt.Sprintln(fmt.Sprintf("%s\t%s\t%d", path, fileKey, fsize))
 
