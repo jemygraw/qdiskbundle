@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -68,6 +69,9 @@ func Sync(privateKey, user, host, srcFileList, destPath string, worker int) {
 
 		if relDir != "" && relDir != "." {
 			mkDir := filepath.Join(destPath, relDir)
+			if runtime.GOOS == "windows" {
+				mkDir = strings.Replace(mkDir, "\\", "/", -1)
+			}
 			sshParams := []string{
 				"-t",
 				"-i", privateKey,
@@ -89,6 +93,9 @@ func Sync(privateKey, user, host, srcFileList, destPath string, worker int) {
 
 			//sync logic
 			fileDestPath := fmt.Sprintf("%s@%s:%s", user, host, filepath.Join(destPath, fileDestKey))
+			if runtime.GOOS == "windows" {
+				fileDestPath = strings.Replace(fileDestPath, "\\", "/", -1)
+			}
 			scpParams := []string{
 				"-i", privateKey,
 				fileSrcPath,
