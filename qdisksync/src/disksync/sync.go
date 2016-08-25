@@ -25,7 +25,7 @@ func doSync(tasks chan func()) {
 	}
 }
 
-func Sync(privateKey, user, host, srcFileList, destPath string, worker int) {
+func Sync(privateKey, user, host, srcFileList, destPath string, worker int, debugMode bool) {
 	srcFp, openErr := os.Open(srcFileList)
 	if openErr != nil {
 		fmt.Println("Error: open src file list error", openErr)
@@ -72,13 +72,19 @@ func Sync(privateKey, user, host, srcFileList, destPath string, worker int) {
 			if runtime.GOOS == "windows" {
 				mkDir = strings.Replace(mkDir, "\\", "/", -1)
 			}
+
+			mkDir = escapeShell(mkDir)
+			mkDirCmdStr := fmt.Sprintf("`mkdir -p %s`", mkDir)
+
 			sshParams := []string{
-				"-t",
 				"-i", privateKey,
 				fmt.Sprintf("%s@%s", user, host),
-				fmt.Sprintf("`mkdir -p %s`", mkDir),
+				mkDirCmdStr,
 			}
 			mkdirCmd := exec.Command("ssh", sshParams...)
+			if debugMode {
+				fmt.Println("Debug:", mkdirCmd)
+			}
 			runErr := mkdirCmd.Run()
 			if runErr != nil {
 				fmt.Println("Error: mkdir failed", mkDir, runErr)
@@ -92,16 +98,47 @@ func Sync(privateKey, user, host, srcFileList, destPath string, worker int) {
 			defer syncWaitGroup.Done()
 
 			//sync logic
-			fileDestPath := fmt.Sprintf("%s@%s:%s", user, host, filepath.Join(destPath, fileDestKey))
+			fileDestPath := filepath.Join(destPath, fileDestKey)
+
+			//check for windows, use cgydrive
+
 			if runtime.GOOS == "windows" {
+				//check file src path
+				driveIndex := strings.Index(fileSrcPath, ":")
+				if driveIndex == -1 {
+					fmt.Println("Error: invalid line", line)
+					return
+				}
+				driveName := fileSrcPath[:driveIndex]
+				fileSrcPath = strings.Replace(fileSrcPath, "\\", "/", -1)
+				driveRight := fileSrcPath[driveIndex+1:]
+				fileSrcPath = fmt.Sprintf("/cygdrive/%s%s", driveName, driveRight)
+
+				//check file dest path
 				fileDestPath = strings.Replace(fileDestPath, "\\", "/", -1)
 			}
+
+			//escape shell chars
+			fileSrcPath = escapeShell(fileSrcPath)
+			fileDestPath = escapeShell(fileDestPath)
+
+			var scpDest string
+			if runtime.GOOS == "windows" {
+				scpDest = fmt.Sprintf("%s@%s:'%s'", user, host, fileDestPath)
+			} else {
+				scpDest = fmt.Sprintf("%s@%s:%s", user, host, fileDestPath)
+			}
+
+			//form scp cmd
 			scpParams := []string{
 				"-i", privateKey,
 				fileSrcPath,
-				fileDestPath,
+				scpDest,
 			}
 			syncCmd := exec.Command("scp", scpParams...)
+			if debugMode {
+				fmt.Println("Debug:", syncCmd)
+			}
 			runErr := syncCmd.Run()
 			if runErr != nil {
 				atomic.AddInt64(&totalFailedCount, 1)
@@ -126,4 +163,14 @@ func Sync(privateKey, user, host, srcFileList, destPath string, worker int) {
 	}
 	fmt.Println("Duration", time.Since(syncStartTime))
 	fmt.Println("----------------------")
+}
+
+func escapeShell(from string) (to string) {
+	//escape some characters
+	to = from
+	escapeChars := []string{"(", ")"}
+	for _, c := range escapeChars {
+		to = strings.Replace(to, c, "\\"+c, -1)
+	}
+	return
 }

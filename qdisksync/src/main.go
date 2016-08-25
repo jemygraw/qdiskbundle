@@ -13,6 +13,7 @@ func main() {
 	var host string
 	var srcFileList string
 	var destPath string
+	var debugMode bool
 
 	flag.IntVar(&worker, "worker", 1, "sync worker count")
 	flag.StringVar(&privateKey, "key", "", "ssh private key with no password")
@@ -20,6 +21,7 @@ func main() {
 	flag.StringVar(&host, "host", "", "ssh login host")
 	flag.StringVar(&srcFileList, "file", "", "file list to sync")
 	flag.StringVar(&destPath, "dest", "", "sync destination path")
+	flag.BoolVar(&debugMode, "debug", false, "debug mode")
 
 	flag.Parse()
 
@@ -48,6 +50,6 @@ func main() {
 		return
 	}
 
-	disksync.Sync(privateKey, user, host, srcFileList, destPath, worker)
+	disksync.Sync(privateKey, user, host, srcFileList, destPath, worker, debugMode)
 
 }
